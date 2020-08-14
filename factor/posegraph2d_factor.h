@@ -85,22 +85,21 @@ public:
        // std::cout<<"my jac "<<std::endl;
         if(jacobians){
             if(jacobians[0]){
-                Eigen::Map<Eigen::Matrix3d,Eigen::RowMajor> jac1(jacobians[0]);
-                jac1(0,0)=-cos(ra);jac1(1,0)=-sin(ra);jac1(2,0)=-sin(ra)*deltax+cos(ra)*deltay;
-                jac1(0,1)=sin(ra);jac1(1,1)=-cos(ra);jac1(2,1)=-cos(ra)*deltax-sin(ra)*deltay;
-                jac1(0,2)=0;       jac1(1,2)=0;       jac1(2,2)=-1.0;
+                Eigen::Map<Eigen::Matrix<double,3,3,Eigen::RowMajor>> jac1(jacobians[0]);
+                jac1(0,0)=-cos(ra);jac1(0,1)=-sin(ra);jac1(0,2)=-sin(ra)*deltax+cos(ra)*deltay;
+                jac1(1,0)=sin(ra); jac1(1,1)=-cos(ra);jac1(1,2)=-cos(ra)*deltax-sin(ra)*deltay;
+                jac1(2,0)=0;       jac1(2,1)=0;       jac1(2,2)=-1.0;
 
             }
             if(jacobians[1]){
-                Eigen::Map<Eigen::Matrix3d,Eigen::RowMajor> jac2(jacobians[1]);
-                jac2(0,0)=cos(ra); jac2(1,0)=sin(ra); jac2(2,0)=0;
-                jac2(0,1)=-sin(ra);jac2(1,1)=cos(ra); jac2(2,1)=0;
-                jac2(0,2)=0;       jac2(1,2)=0;       jac2(2,2)=1.0;
+                Eigen::Map<Eigen::Matrix<double,3,3,Eigen::RowMajor>> jac2(jacobians[1]);
+                jac2(0,0)=cos(ra); jac2(0,1)=sin(ra); jac2(0,2)=0;
+                jac2(1,0)=-sin(ra);jac2(1,1)=cos(ra); jac2(1,2)=0;
+                jac2(2,0)=0;       jac2(2,1)=0;       jac2(2,2)=1.0;
 
 //                std::cout<<jac2<<std::endl;
             }
         }
-        //std::cout<<std::endl<<Eigen::Map<Eigen::Matrix<double,9,1>,Eigen::RowMajor>(jacobians[0]).transpose()<<std::endl<<Eigen::Map<Eigen::Matrix<double,9,1>,Eigen::RowMajor>(jacobians[1]).transpose()<<std::endl;
         return true;
 
     }

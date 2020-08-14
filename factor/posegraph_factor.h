@@ -20,13 +20,11 @@ public:
      bool Evaluate(double const* const* parameters,double* residuals,double** jacobians) const{
         Eigen::Vector3d Pa(parameters[0][0],parameters[0][1],parameters[0][2]);
         Eigen::Quaterniond Qa(parameters[0][6],parameters[0][3],parameters[0][4],parameters[0][5]);
-        Qa.normalize();
 
         Eigen::Vector3d Pb(parameters[1][0],parameters[1][1],parameters[1][2]);
         Eigen::Quaterniond Qb(parameters[1][6],parameters[1][3],parameters[1][4],parameters[1][5]);
-        Qb.normalize();
 
-        Eigen::Map<Eigen::Matrix<double,6,1>,Eigen::RowMajor> res(residuals);
+        Eigen::Map<Eigen::Matrix<double,6,1>> res(residuals);
 
         Eigen::Vector3d rt=Qa.toRotationMatrix().transpose()*(Pb-Pa)-tab_;
         Eigen::Quaterniond qn=(Qa.inverse()*Qb*qab_.inverse()).normalized();
@@ -47,11 +45,13 @@ public:
                 Rxyz.block<3,3>(1,0)=0.5*Eigen::Matrix3d::Identity();
                 Eigen::Matrix3d rqqa=-2.0*Lxzy*Left(qab_*Qb.inverse()*Qa)*Rxyz;
                 Eigen::Matrix3d rtqa=skew(Qa.inverse().toRotationMatrix()*(Pb-Pa));
-                Eigen::Map<Eigen::Matrix<double,6,7>,Eigen::ColMajor> Jac0(jacobians[0]);
+
+                Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>> Jac0(jacobians[0]);
                 Jac0.block<3,3>(0,0)=rtpa;
                 Jac0.block<3,3>(0,3)=rtqa;
                 Jac0.block<3,3>(3,0)=zero;
                 Jac0.block<3,3>(3,3)=rqqa;
+                Jac0.leftCols(6)=Infomatrix*Jac0.leftCols(6);
                 Jac0.rightCols<1>().setZero();
                 //std::cout<<"original A Jac "<<std::endl<<Jac0<<std::endl;
             }
@@ -62,11 +62,12 @@ public:
                 Eigen::Matrix<double,4,3> Rxyz=Eigen::Matrix<double,4,3>::Zero();
                 Rxyz.block<3,3>(1,0)=0.5*Eigen::Matrix3d::Identity();
                 Eigen::Matrix3d rqqb=2.0*Lxzy*Left(Qa.inverse()*Qb)*Right(qab_.inverse())*Rxyz;
-                Eigen::Map<Eigen::Matrix<double,6,7>,Eigen::ColMajor> Jac1(jacobians[1]);
+                Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>> Jac1(jacobians[1]);
                 Jac1.block<3,3>(0,0)=Qa.toRotationMatrix().transpose();
                 Jac1.block<3,3>(0,3)=zero;
                 Jac1.block<3,3>(3,0)=zero;
                 Jac1.block<3,3>(3,3)=rqqb;
+                Jac1.leftCols(6)=Infomatrix*Jac1.leftCols(6);
                 Jac1.rightCols<1>().setZero();
                 //std::cout<<"original B Jac "<<std::endl<<Jac1<<std::endl;
 
@@ -92,9 +93,9 @@ public:
         Trans.topRows<6>().setIdentity();
         Trans.bottomRows<1>().setZero();
 
-        std::cout << Eigen::Map<Eigen::Matrix<double, 6, 7>,Eigen::RowMajor>(jaco[0])*Trans << std::endl
+        std::cout << Eigen::Map<Eigen::Matrix<double, 6, 7,Eigen::RowMajor>>(jaco[0])*Trans << std::endl
                   << std::endl;
-        std::cout << Eigen::Map<Eigen::Matrix<double, 6, 7>,Eigen::RowMajor>(jaco[1])*Trans << std::endl
+        std::cout << Eigen::Map<Eigen::Matrix<double, 6, 7,Eigen::RowMajor>>(jaco[1])*Trans << std::endl
                   << std::endl;
 
 

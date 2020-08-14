@@ -22,14 +22,16 @@ public:
         Eigen::Map<Eigen::Vector3d> p(x_plus_delta);
         Eigen::Map<Eigen::Quaterniond> q(x_plus_delta + 3);
 
-        p = _p +_q.toRotationMatrix()* dp;
+        p = _p +_q.toRotationMatrix()*dp;
         q = (_q * dq).normalized();
 
         return true;
     }
     bool ComputeJacobian(const double *x, double *jacobian) const{
+        Eigen::Map<const Eigen::Quaterniond> q(x + 3);
         Eigen::Map<Eigen::Matrix<double, 7, 6,Eigen::RowMajor>> j(jacobian);
         j.topRows<6>().setIdentity();
+        j.block<3,3>(0,0)=q.toRotationMatrix();
         j.bottomRows<1>().setZero();
         return true;
     }

@@ -18,7 +18,7 @@ void assignToArr(Vertex_SE2T &Vertexs,double PQ[][3],int id){
     PQ[id][2]=Vertexs[id].angle;
 }
 int main() {
-    const string file = "/home/unicorn/CLionProjects/sfm/dataset/city10000.g2o";
+    const string file = "../dataset/city10000.g2o";
     auto res = readg2oSE2(file, Vertexs, Edges);
     if (res) {
         cout << Vertexs.size() << endl;

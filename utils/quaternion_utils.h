@@ -50,14 +50,14 @@ Eigen::Quaterniond deltaQ(Eigen::Vector3d theta){
     return dq;
 }
 
-Eigen::Matrix<double,3,4> QuaternionsDerviate(Eigen::Quaterniond q,Eigen::Vector3d p){
-    Eigen::Matrix<double,3,4> jac;
-    double w=q.w();
-    Eigen::Vector3d qv(q.x(),q.y(),q.z());
-    jac.leftCols(1)=2*w*p+qv.cross(qv);
-    jac.rightCols(3)=2*(qv.transpose()*p*Eigen::Matrix3d::Identity()+qv*p.transpose()-p*qv.transpose()-w*skew(p));
-    return jac;
-}
+//Eigen::Matrix<double,3,4> QuaternionsDerviate(Eigen::Quaterniond q,Eigen::Vector3d p){
+//    Eigen::Matrix<double,3,4> jac;
+//    double w=q.w();
+//    Eigen::Vector3d qv(q.x(),q.y(),q.z());
+//    jac.leftCols(1)=2*w*p+qv.cross(qv);
+//    jac.rightCols(3)=2*(qv.transpose()*p*Eigen::Matrix3d::Identity()+qv*p.transpose()-p*qv.transpose()-w*skew(p));
+//    return jac;
+//}
 
 
 #endif //SFM_QUATERNION_UTILS_H

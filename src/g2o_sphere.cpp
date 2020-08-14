@@ -24,7 +24,7 @@ void assignToArr(Vertex_SE3T &Vertex3s,double PQ[][7],int id){
 int main(){
     Vertex_SE3T Vertex3s;
     EDGE_SE3T Edge3s;
-    const string se3file="/home/unicorn/CLionProjects/sfm/dataset/sphere2500.g2o";
+    const string se3file="../dataset/sphere2500.g2o";
     auto res3=readg2oSE3(se3file,Vertex3s,Edge3s);
     if(!res3){
         cout<<"read g2o file failed"<<endl;

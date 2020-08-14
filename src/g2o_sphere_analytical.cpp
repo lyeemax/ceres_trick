@@ -40,7 +40,7 @@ void test(){
 }
 
 int main(){
-    const string se3file="/home/unicorn/CLionProjects/sfm/dataset/sphere2500.g2o";
+    const string se3file="../dataset/sphere2500.g2o";
     auto res3=readg2oSE3(se3file,Vertex3s,Edge3s);
     if(!res3){
         cout<<"read g2o file failed"<<endl;
@@ -51,6 +51,7 @@ int main(){
     ceres::Problem problem;
     ceres::LossFunction *cauchy=new ceres::CauchyLoss(1.0);
     PoseLocalParameterization *lp=new PoseLocalParameterization();
+    PoseLocalParameterizationMath *lp1=new PoseLocalParameterizationMath();
 
     auto iter=Edge3s.begin();
     for(;iter!=Edge3s.end();iter++){
@@ -59,7 +60,48 @@ int main(){
         assignToArr(Vertex3s,PQ,id1);
         assignToArr(Vertex3s,PQ,id2);
         auto sqrtInfo=iter->second.InfoMatrix.llt().matrixL();
+        //ceres::CostFunction *poseGrapgAuto=PoseGraphAutoDiff::create(iter->second.t12,iter->second.R12,sqrtInfo);
+
         PoseGraph *poseGraph=new PoseGraph(iter->second.t12,iter->second.R12,sqrtInfo);
+
+//        Eigen::Matrix<double,7,6> jacqt1,jacqt2;
+//        double *Jacqt[2]={jacqt1.data(),jacqt2.data()};
+//        lp1->ComputeJacobian(PQ[id1],Jacqt[0]);
+//        lp1->ComputeJacobian(PQ[id2],Jacqt[1]);
+//
+//        Eigen::Matrix<double,7,6> jac_analytic1,jac_analytic2;
+//        double *JacAn[2]={jac_analytic1.data(),jac_analytic2.data()};
+//        lp->ComputeJacobian(PQ[id1],JacAn[0]);
+//        lp->ComputeJacobian(PQ[id2],JacAn[1]);
+//
+//        double *param[2]={PQ[id1],PQ[id2]};
+//        Eigen::Matrix<double,6,1> res1,res2;
+//        res1.setZero();
+//        res2.setZero();
+//        Eigen::Matrix<double,6,7> autojac1,autojac2;
+//        Eigen::Matrix<double,6,7> jac1,jac2;
+//        double *Jac1[2]={autojac1.data(),autojac2.data()};
+//        double *Jac2[2]={jac1.data(),jac2.data()};
+//        poseGrapgAuto->Evaluate(param,res1.data(),Jac1);
+//        poseGraph->Evaluate(param,res2.data(),Jac2);
+//
+//        Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>> AJ1(Jac1[0]);
+//        auto trueAJ1=AJ1*Eigen::Map<Eigen::Matrix<double,7,6,Eigen::RowMajor>>(Jacqt[0]);
+//
+//        Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>> AJ2(Jac1[1]);
+//        auto trueAJ2=AJ2*Eigen::Map<Eigen::Matrix<double,7,6,Eigen::RowMajor>>(Jacqt[1]);
+//        cout<<"auto jac is "<<endl<< trueAJ1<<endl
+//        << trueAJ2<<endl;
+//
+//        cout<<"my jac is "<<endl<<Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>>(Jac2[0])*
+//                Eigen::Map<Eigen::Matrix<double,7,6,Eigen::RowMajor>>(JacAn[0])<<endl
+//            <<Eigen::Map<Eigen::Matrix<double,6,7,Eigen::RowMajor>>(Jac2[1])*
+//                    Eigen::Map<Eigen::Matrix<double,7,6,Eigen::RowMajor>>(JacAn[1])<<endl;
+//
+//        cout<<"--------"<<endl;
+//        cout<<"auto res"<<endl<<res1.transpose()<<endl;
+//        cout<<"my res "<<endl<<res2.transpose()<<endl;
+
         problem.AddResidualBlock(poseGraph,cauchy,PQ[id1],PQ[id2]);
         problem.SetParameterization(PQ[id1],lp);
         problem.SetParameterization(PQ[id2],lp);
@@ -69,8 +111,8 @@ int main(){
     ceres::Solver::Options options;
     options.minimizer_progress_to_stdout = true;
     options.linear_solver_type = ceres::SPARSE_NORMAL_CHOLESKY;
-    //options.num_threads = 2;
-    //options.trust_region_strategy_type = ceres::DOGLEG;
+    options.num_threads = 2;
+    options.trust_region_strategy_type = ceres::DOGLEG;
     options.max_num_iterations = 200;
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
