@@ -9,6 +9,7 @@
 #include "readg2o.h"
 #include <ceres/ceres.h>
 #include "quaternion_utils.h"
+#include "so3_utils.h"
 
 class PoseGraph:public ceres::SizedCostFunction<6,7,7>{
 public:
@@ -73,12 +74,6 @@ public:
 
             }
         }
-        return true;
-    }
-    bool EvaluateSO3(double const* const* parameters,
-                  double* residuals,
-                  double** jacobians) const{
-        //#TODO
         return true;
     }
     void check(double **parameters)
@@ -197,4 +192,70 @@ public:
 
 };
 
+
+class PoseGraphSO3:public ceres::SizedCostFunction<6,6,6>{
+public:
+    PoseGraphSO3(Eigen::Vector3d tab,Eigen::Quaterniond qab,Eigen::Matrix<double,6,6> info){
+        qab_=qab;
+        tab_=tab;
+        Infomatrix=info;
+    }
+    bool Evaluate(double const* const* parameters,double* residuals,double** jacobians) const{
+
+        Eigen::Vector3d Pa(parameters[0][0],parameters[0][1],parameters[0][2]);
+        Eigen::Vector3d Va(parameters[0][3],parameters[0][4],parameters[0][5]);
+        Eigen::Matrix3d Ra=toRotationMatrix(Va);
+
+        Eigen::Vector3d Pb(parameters[1][0],parameters[1][1],parameters[1][2]);
+        Eigen::Vector3d Vb(parameters[1][3],parameters[1][4],parameters[1][5]);
+        Eigen::Matrix3d Rb=toRotationMatrix(Vb);
+
+
+        Eigen::Map<Eigen::Matrix<double,6,1>> res(residuals);
+
+        Eigen::Vector3d rt=Ra.transpose()*(Pb-Pa)-tab_;
+        Eigen::Matrix3d deltaR=Ra.transpose()*Rb*(qab_.toRotationMatrix().transpose());
+        Eigen::Vector3d rq=toRotationVec(deltaR);
+
+        res.block<3,1>(0,0)=rt;
+        res.block<3,1>(3,0)=rq;
+        res=Infomatrix*res;
+        //std::cout<<"res is "<<res.transpose()<<std::endl;
+
+        if(jacobians){
+            if(jacobians[0]){
+                Eigen::Matrix3d rtpa=-Ra.transpose();
+                Eigen::Matrix3d rtqa=skew(Ra.transpose()*(Pb-Pa));
+                Eigen::Matrix3d zero=Eigen::Matrix3d::Zero();
+                Eigen::Matrix3d rqqa=-leftJacobianInverse(deltaR);
+
+                Eigen::Map<Eigen::Matrix<double,6,6,Eigen::RowMajor>> Jac0(jacobians[0]);
+                Jac0.block<3,3>(0,0)=rtpa;
+                Jac0.block<3,3>(0,3)=rtqa;
+                Jac0.block<3,3>(3,0)=zero;
+                Jac0.block<3,3>(3,3)=rqqa;
+                Jac0.leftCols(6)=Infomatrix*Jac0.leftCols(6);
+                //std::cout<<"original A Jac "<<std::endl<<Jac0<<std::endl;
+            }
+            if(jacobians[1]){
+                Eigen::Matrix3d zero=Eigen::Matrix3d::Zero();
+                Eigen::Matrix3d rqqb=RightJacobianInverse(deltaR)*qab_.toRotationMatrix();
+
+                Eigen::Map<Eigen::Matrix<double,6,6,Eigen::RowMajor>> Jac1(jacobians[1]);
+                Jac1.block<3,3>(0,0)=Ra.transpose();
+                Jac1.block<3,3>(0,3)=zero;
+                Jac1.block<3,3>(3,0)=zero;
+                Jac1.block<3,3>(3,3)=rqqb;
+                Jac1.leftCols(6)=Infomatrix*Jac1.leftCols(6);
+                //std::cout<<"original B Jac "<<std::endl<<Jac1<<std::endl;
+
+            }
+        }
+        return true;
+    }
+    Eigen::Quaterniond qab_;
+    Eigen::Vector3d tab_;
+    Eigen::Matrix<double,6,6> Infomatrix;
+
+};
 #endif //SFM_POSEGRAPH_FACTOR_H

@@ -11,6 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 #include <vector>
+#include "so3_utils.h"
 
 // Reads a file in the g2o filename format that describes a pose graph
 // problem. The g2o format consists of two entries, vertices and constraints.
@@ -181,6 +182,20 @@ bool savePose(const std::string& filename,double PQ[][7],int n) {
     }
     for (int i = 0; i <n ; ++i) {
         file<<i<<" "<<PQ[i][0]<<" "<<PQ[i][1]<<" "<<PQ[i][2]<<" "<<PQ[i][3]<<" "<<PQ[i][4]<<" "<<PQ[i][5]<<" "<<PQ[i][6]<<'\n';
+    }
+    return true;
+}
+
+bool savePoseSO3(const std::string& filename,double PQ[][6],int n) {
+    std::fstream file;
+    file.open(filename.c_str(),std::istream::out);
+    if(!file){
+        std::cout<<"can not write file"<<std::endl;
+        return false;
+    }
+    for (int i = 0; i <n ; ++i) {
+        auto q=toQua(Eigen::Vector3d (PQ[i][3],PQ[i][4],PQ[i][5]));
+        file<<i<<" "<<PQ[i][0]<<" "<<PQ[i][1]<<" "<<PQ[i][2]<<" "<<q.x()<<" "<<q.y()<<" "<<q.z()<<" "<<q.w()<<'\n';
     }
     return true;
 }

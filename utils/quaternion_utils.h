@@ -10,11 +10,12 @@
 #include <Eigen/Geometry>
 #include <ceres/ceres.h>
 
+
 Eigen::Matrix3d skew(Eigen::Vector3d v){
     Eigen::Matrix3d Vhat;
     Vhat<<0,-v[2],v[1],
-            v[2],0,-v[0],
-            -v[1],v[0],0;
+        v[2],0,-v[0],
+        -v[1],v[0],0;
     return Vhat;
 }
 

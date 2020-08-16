@@ -22,11 +22,14 @@ target_link_libraries(curve_fitting ${CERES_LIBRARIES})
 add_executable(sphere  src/g2o_sphere.cpp factor/posegraph_factor.h utils/quaternion_utils.h factor/PoseLocalParameter.h)
 target_link_libraries(sphere ${CERES_LIBRARIES})
 
-add_executable(sphere_analytic  src/g2o_sphere_analytical.cpp factor/posegraph_factor.h utils/quaternion_utils.h factor/PoseLocalParameter.h)
+add_executable(sphere_analytic  src/g2o_sphere_analytical.cpp factor/posegraph_factor.h utils/quaternion_utils.h factor/PoseLocalParameter.h utils/so3_utils.h)
 target_link_libraries(sphere_analytic ${CERES_LIBRARIES})
 
 add_executable(slam2d src/slam2d.cpp factor/posegraph2d_factor.h)
 target_link_libraries(slam2d  ${CERES_LIBRARIES})
 
-add_executable(tum_demo src/tum_rgbd.cpp factor/projection_factor.h factor/PoseLocalParameter.h)
-target_link_libraries(tum_demo ${LIBS})
+#add_executable(tum_demo src/tum_rgbd.cpp factor/projection_factor.h factor/PoseLocalParameter.h)
+#target_link_libraries(tum_demo ${LIBS})
+
+add_executable(sphere_analytic_so3 src/g20_sphere_so3_analytic.cpp factor/posegraph_factor.h)
+target_link_libraries(sphere_analytic_so3 ${CERES_LIBRARIES})
